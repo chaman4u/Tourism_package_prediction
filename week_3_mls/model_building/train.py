@@ -20,6 +20,10 @@ Xtest  = pd.read_csv("Xtest.csv")
 ytrain = pd.read_csv("ytrain.csv").squeeze()
 ytest  = pd.read_csv("ytest.csv").squeeze()
 
+# Strip whitespace from column names to avoid issues
+Xtrain.columns = Xtrain.columns.str.strip()
+Xtest.columns = Xtest.columns.str.strip()
+
 # Print column names to debug
 print("Columns in Xtrain:", Xtrain.columns.tolist())
 print("Data shape - Xtrain:", Xtrain.shape, "ytrain:", ytrain.shape)
@@ -31,29 +35,30 @@ categorical_features = [col for col in Xtrain.columns if Xtrain[col].dtype == 'o
 print("Numeric features:", numeric_features)
 print("Categorical features:", categorical_features)
 
-# Handle case where there are no categorical features
-if len(categorical_features) == 0:
+# Define the preprocessing steps
+if len(numeric_features) > 0 and len(categorical_features) > 0:
+    preprocessor = make_column_transformer(
+        (StandardScaler(), numeric_features),
+        (OneHotEncoder(handle_unknown="ignore"), categorical_features)
+    )
+elif len(numeric_features) > 0:
     print("Warning: No categorical features found. Using only numeric features.")
     preprocessor = make_column_transformer(
         (StandardScaler(), numeric_features),
         remainder='drop'
     )
-elif len(numeric_features) == 0:
+elif len(categorical_features) > 0:
     print("Warning: No numeric features found. Using only categorical features.")
     preprocessor = make_column_transformer(
         (OneHotEncoder(handle_unknown="ignore"), categorical_features),
         remainder='drop'
     )
 else:
-    # Set the class weight to handle class imbalance
-    class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
-    print(f"Class weight: {class_weight}")
-    
-    # Define the preprocessing steps
-    preprocessor = make_column_transformer(
-        (StandardScaler(), numeric_features),
-        (OneHotEncoder(handle_unknown="ignore"), categorical_features)
-    )
+    raise ValueError("No features found in the dataset!")
+
+# Calculate class weight to handle class imbalance
+class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
+print(f"Class weight: {class_weight}")
 
 # Define base XGBoost model
 xgb_model = xgb.XGBClassifier(scale_pos_weight=class_weight, random_state=42)
