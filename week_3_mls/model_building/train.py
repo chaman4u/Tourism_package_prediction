@@ -20,10 +20,15 @@ Xtest  = pd.read_csv("Xtest.csv")
 ytrain = pd.read_csv("ytrain.csv").squeeze()
 ytest  = pd.read_csv("ytest.csv").squeeze()
 
-# One-hot encode 'Type' and scale numeric features
-numeric_features = ["Air temperature", "Process temperature",
-                     "Rotational speed", "Torque", "Tool wear"]
-categorical_features = ["Type"]
+# Print column names to debug
+print("Columns in Xtrain:", Xtrain.columns.tolist())
+
+# Identify numeric and categorical features based on actual dataset
+numeric_features = [col for col in Xtrain.columns if Xtrain[col].dtype in ['int64', 'float64']]
+categorical_features = [col for col in Xtrain.columns if Xtrain[col].dtype == 'object']
+
+print("Numeric features:", numeric_features)
+print("Categorical features:", categorical_features)
 
 # Set the class weight to handle class imbalance
 class_weight = ytrain.value_counts()[0] / ytrain.value_counts()[1]
