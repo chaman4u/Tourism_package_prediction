@@ -79,6 +79,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add week_3_mls/deployment/best_tourism_model_v1.joblib
-          git commit -m "Add trained model [skip ci]" || echo "No changes to commit"
-          git push
+          
+          # Check if the model file exists before attempting to add it
+          if [ -f week_3_mls/deployment/best_tourism_model_v1.joblib ]; then
+            git add week_3_mls/deployment/best_tourism_model_v1.joblib
+            git commit -m "Add trained model [skip ci]" || echo "No changes to commit"
+            git push
+            echo "Model successfully committed and pushed"
+          else
+            echo "Error: Model file not found at week_3_mls/deployment/best_tourism_model_v1.joblib"
+            echo "Training may have failed. Check the logs above."
+            exit 1
+          fi
